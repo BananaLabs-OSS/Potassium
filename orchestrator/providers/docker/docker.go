@@ -7,6 +7,7 @@ import (
 
 	"github.com/bananalabs-oss/potassium/orchestrator"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/go-connections/nat"
 )
 import "github.com/docker/docker/client"
 
@@ -136,14 +137,39 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 		env = append(env, key+"="+value)
 	}
 
+	// Build buinds from request.volumes
+	var binds []string
+	for host, c := range req.Volumes {
+		binds = append(binds, host+":"+c)
+	}
+
+	// Build exposed ports (container side)
+	exposedPorts := nat.PortSet{}
+	portBindings := nat.PortMap{}
+
+	for _, p := range req.Ports {
+		containerPort := nat.Port(fmt.Sprintf("%d/%s", p.Container, p.Protocol))
+		exposedPorts[containerPort] = struct{}{}
+		portBindings[containerPort] = []nat.PortBinding{
+			{
+				HostIP:   "",
+				HostPort: fmt.Sprintf("%d", p.Host),
+			},
+		}
+	}
+
 	// Create container
 	resp, err := d.client.ContainerCreate(
 		ctx,
 		&container.Config{
-			Image: req.Image,
-			Env:   env, // Env Slice
+			Image:        req.Image,
+			Env:          env, // Env Slice
+			ExposedPorts: exposedPorts,
 		},
-		&container.HostConfig{},
+		&container.HostConfig{
+			Binds:        binds,
+			PortBindings: portBindings,
+		},
 		nil, // Network Config
 		nil, // Platform
 		"",  // Name (Docker generates one)

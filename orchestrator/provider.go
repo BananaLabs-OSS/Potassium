@@ -18,9 +18,17 @@ type Server struct {
 	Ports  map[string]int `json:"port"`
 }
 
+type PortBinding struct {
+	Host      int    `json:"host"`
+	Container int    `json:"container"`
+	Protocol  string `json:"protocol"`
+}
+
 type AllocateRequest struct {
 	Image       string            `json:"image"`
 	Environment map[string]string `json:"environment"`
+	Volumes     map[string]string `json:"volumes"`
+	Ports       []PortBinding     `json:"ports"`
 }
 
 type Provider interface {
