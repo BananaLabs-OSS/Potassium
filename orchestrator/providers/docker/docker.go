@@ -123,7 +123,7 @@ func (d *DockerProvider) Get(ctx context.Context, id string) (*orchestrator.Serv
 		Name:   c.Name,
 		Status: status,
 		IP:     ip,
-		//Ports:  ports,
+		Ports:  ports,
 	}
 
 	return &server, nil
