@@ -47,7 +47,7 @@ type ListFilter struct {
 	Type          ServerType // Filter by lobby/game
 	Mode          string     // Filter by skywars/survival
 	HasCapacity   bool       // has player space (for lobbies)
-	HasReadyMatch bool       // has a ready match (for game servers
+	HasReadyMatch bool       // has a ready match (for game servers)
 }
 
 type Registry struct {
