@@ -29,6 +29,8 @@ type AllocateRequest struct {
 	Environment map[string]string `json:"environment"`
 	Volumes     map[string]string `json:"volumes"`
 	Ports       []PortBinding     `json:"ports"`
+	Network     string            `json:"network,omitempty"`
+	IP          string            `json:"ip,omitempty"`
 }
 
 type Provider interface {
