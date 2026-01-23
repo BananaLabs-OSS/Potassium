@@ -7,6 +7,7 @@ import (
 
 	"github.com/bananalabs-oss/potassium/orchestrator"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 )
 import "github.com/docker/docker/client"
@@ -158,6 +159,27 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 		}
 	}
 
+	// Only bind to host if not using overlay network
+	if req.Network != "" {
+		portBindings = nat.PortMap{}
+	}
+
+	// Build network config if specified
+	var networkConfig *network.NetworkingConfig
+	if req.Network != "" {
+		endpointConfig := &network.EndpointSettings{}
+		if req.IP != "" {
+			endpointConfig.IPAMConfig = &network.EndpointIPAMConfig{
+				IPv4Address: req.IP,
+			}
+		}
+		networkConfig = &network.NetworkingConfig{
+			EndpointsConfig: map[string]*network.EndpointSettings{
+				req.Network: endpointConfig,
+			},
+		}
+	}
+
 	// Create container
 	resp, err := d.client.ContainerCreate(
 		ctx,
@@ -170,9 +192,9 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 			Binds:        binds,
 			PortBindings: portBindings,
 		},
-		nil, // Network Config
-		nil, // Platform
-		"",  // Name (Docker generates one)
+		networkConfig, // Network Config
+		nil,           // Platform
+		"",            // Name (Docker generates one)
 	)
 	if err != nil {
 		return nil, err
