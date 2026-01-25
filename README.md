@@ -119,15 +119,16 @@ type AllocateRequest struct {
 ### ServerInfo
 ```go
 type ServerInfo struct {
-    ID         string
-    Type       ServerType  // "lobby" or "game"
-    Mode       string
-    Host       string
-    Port       int
-    Players    int
-    MaxPlayers int
-    Matches    map[string]MatchInfo
-    Metadata   map[string]string
+    ID          string
+    Type        ServerType  // "lobby" or "game"
+    Mode        string
+    Host        string
+    Port        int
+	WebhookPort int
+    Players     int
+    MaxPlayers  int
+    Matches     map[string]MatchInfo
+    Metadata    map[string]string
 }
 ```
 

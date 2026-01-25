@@ -21,11 +21,12 @@ const (
 )
 
 type ServerInfo struct {
-	ID   string     `json:"ID"`
-	Type ServerType `json:"Type"`
-	Mode string     `json:"Mode"`
-	Host string     `json:"Host"`
-	Port int        `json:"Port"`
+	ID          string     `json:"ID"`
+	Type        ServerType `json:"Type"`
+	Mode        string     `json:"Mode"`
+	Host        string     `json:"Host"`
+	Port        int        `json:"Port"`
+	WebhookPort int        `json:"WebhookPort,omitempty"`
 
 	// For lobby servers (no matches)
 	Players    int `json:"Players"`
