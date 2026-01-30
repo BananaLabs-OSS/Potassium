@@ -89,7 +89,7 @@ reg.Update("skywars-1", func(s *registry.ServerInfo) {
 
 ### Peel Client
 ```go
-import "github.com/bananalabs-oss/potassium/peel"
+import "github.com/bananalabs-oss/potassium/relay"
 
 client := peel.NewClient("http://localhost:8080")
 
