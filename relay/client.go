@@ -1,4 +1,4 @@
-package peel
+package relay
 
 import (
 	"bytes"
