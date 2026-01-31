@@ -2,7 +2,11 @@ module github.com/bananalabs-oss/potassium
 
 go 1.25.6
 
-require github.com/docker/docker v28.5.2+incompatible
+require (
+	github.com/docker/docker v28.5.2+incompatible
+	github.com/docker/go-connections v0.6.0
+	github.com/gabstv/go-bsdiff v1.0.5
+)
 
 require (
 	github.com/Microsoft/go-winio v0.4.21 // indirect
@@ -11,8 +15,8 @@ require (
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/go-connections v0.6.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
+	github.com/dsnet/compress v0.0.0-20171208185109-cc9eb1d7ad76 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
