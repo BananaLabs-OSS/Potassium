@@ -103,6 +103,30 @@ err := client.DeleteRoute("192.168.1.50")
 routes, err := client.ListRoutes()
 ```
 
+### Binary Diffing
+```go
+import "github.com/bananalabs-oss/potassium/diff"
+
+// Generate patch
+patch, err := diff.Generate("old_file.bin", "new_file.bin")
+
+// Apply patch
+err = diff.Apply("old_file.bin", "patch.bsdiff", "new_file.bin")
+```
+
+### Manifest
+```go
+import "github.com/bananalabs-oss/potassium/manifest"
+
+// Create manifest
+m := manifest.New("1.0.0", "1.1.0")
+m.AddFile("game.exe", manifest.ActionPatch, oldHash, newHash, "game.exe.patch")
+m.Save("manifest.json")
+
+// Load manifest
+m, err := manifest.Load("manifest.json")
+```
+
 ## Types
 
 ### AllocateRequest
