@@ -91,7 +91,7 @@ reg.Update("skywars-1", func(s *registry.ServerInfo) {
 ```go
 import "github.com/bananalabs-oss/potassium/relay"
 
-client := peel.NewClient("http://localhost:8080")
+client := relay.NewClient("http://localhost:8080")
 
 // Set route
 err := client.SetRoute("192.168.1.50", "10.99.0.10:5520")
@@ -107,12 +107,21 @@ routes, err := client.ListRoutes()
 ```go
 import "github.com/bananalabs-oss/potassium/diff"
 
-// Generate patch
+// bsdiff — pure Go, good for files under ~500MB
 patch, err := diff.Generate("old_file.bin", "new_file.bin")
-
-// Apply patch
 err = diff.Apply("old_file.bin", "patch.bsdiff", "new_file.bin")
+
+// HDiffPatch — exec wrapper, handles multi-GB files with constant memory
+err = diff.GenerateHDiff("old_file.bin", "new_file.bin", "patch.hdiff")
+err = diff.ApplyHDiff("old_file.bin", "patch.hdiff", "new_file.bin")
 ```
+
+HDiffPatch requires `hdiffz`/`hpatchz` binaries. Place them in one of:
+- `bin/{os}/` next to the executable
+- `bin/{os}/` in the working directory
+- System PATH
+
+Download from [HDiffPatch releases](https://github.com/sisong/HDiffPatch/releases).
 
 ### Manifest
 ```go
@@ -120,7 +129,14 @@ import "github.com/bananalabs-oss/potassium/manifest"
 
 // Create manifest
 m := manifest.New("1.0.0", "1.1.0")
-m.AddFile("game.exe", manifest.ActionPatch, oldHash, newHash, "game.exe.patch")
+m.AddFile(manifest.FileEntry{
+Path:      "game.exe",
+Action:    manifest.ActionPatch,
+OldHash:   oldHash,
+NewHash:   newHash,
+PatchFile: "game.exe.patch",
+Algorithm: "hdiff",
+})
 m.Save("manifest.json")
 
 // Load manifest
