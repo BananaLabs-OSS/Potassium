@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"os"
 	"time"
 )
@@ -22,6 +23,7 @@ type FileEntry struct {
 	OldHash   string `json:"old_hash,omitempty"`
 	NewHash   string `json:"new_hash,omitempty"`
 	PatchFile string `json:"patch_file,omitempty"`
+	Algorithm string `json:"algorithm,omitempty"`
 }
 
 type Manifest struct {
@@ -72,10 +74,15 @@ func Load(path string) (*Manifest, error) {
 
 // HashFile computes SHA256 hash of a file
 func HashFile(path string) (string, error) {
-	data, err := os.ReadFile(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return "", err
 	}
-	hash := sha256.Sum256(data)
-	return hex.EncodeToString(hash[:]), nil
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
