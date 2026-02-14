@@ -7,12 +7,14 @@ From [BananaLabs OSS](https://github.com/bananalabs-oss).
 ## Overview
 
 Potassium provides:
+
 - **Provider Interface**: Abstract container operations
 - **Docker Provider**: Docker/Podman implementation
 - **Registry**: In-memory server registry with filtering
 - **Types**: Shared types for orchestration requests
 
 ## Installation
+
 ```bash
 go get github.com/bananalabs-oss/potassium
 ```
@@ -20,6 +22,7 @@ go get github.com/bananalabs-oss/potassium
 ## Usage
 
 ### Docker Provider
+
 ```go
 import "github.com/bananalabs-oss/potassium/orchestrator/providers/docker"
 
@@ -31,7 +34,7 @@ if err != nil {
 // Allocate container
 server, err := provider.Allocate(ctx, orchestrator.AllocateRequest{
     Image: "localhost/hytale-server",
-    Ports: []orchestrator.PortMapping{
+    Ports: []orchestrator.PortBinding{
         {Host: 5521, Container: 5521, Protocol: "udp"},
     },
     Environment: map[string]string{
@@ -47,18 +50,20 @@ err = provider.Deallocate(ctx, server.ID)
 ```
 
 ### Overlay Network Mode
+
 ```go
 server, err := provider.Allocate(ctx, orchestrator.AllocateRequest{
     Image:   "localhost/hytale-server",
     Network: "banananet",
     IP:      "10.99.0.10",
-    Ports: []orchestrator.PortMapping{
+    Ports: []orchestrator.PortBinding{
         {Container: 5520, Protocol: "udp"},
     },
 })
 ```
 
 ### Registry
+
 ```go
 import "github.com/bananalabs-oss/potassium/registry"
 
@@ -67,7 +72,7 @@ reg, _ := registry.New()
 // Register
 reg.Register(registry.ServerInfo{
     ID:         "skywars-1",
-    Type:       registry.GameServer,
+    Type:       registry.TypeGame,
     Mode:       "skywars",
     Host:       "10.99.0.10",
     Port:       5520,
@@ -76,7 +81,7 @@ reg.Register(registry.ServerInfo{
 
 // Query
 servers := reg.List(&registry.ListFilter{
-    Type:          registry.GameServer,
+    Type:          registry.TypeGame,
     Mode:          "skywars",
     HasReadyMatch: true,
 })
@@ -88,6 +93,7 @@ reg.Update("skywars-1", func(s *registry.ServerInfo) {
 ```
 
 ### Peel Client
+
 ```go
 import "github.com/bananalabs-oss/potassium/relay"
 
@@ -104,6 +110,7 @@ routes, err := client.ListRoutes()
 ```
 
 ### Binary Diffing
+
 ```go
 import "github.com/bananalabs-oss/potassium/diff"
 
@@ -117,6 +124,7 @@ err = diff.ApplyHDiff("old_file.bin", "patch.hdiff", "new_file.bin")
 ```
 
 HDiffPatch requires `hdiffz`/`hpatchz` binaries. Place them in one of:
+
 - `bin/{os}/` next to the executable
 - `bin/{os}/` in the working directory
 - System PATH
@@ -124,6 +132,7 @@ HDiffPatch requires `hdiffz`/`hpatchz` binaries. Place them in one of:
 Download from [HDiffPatch releases](https://github.com/sisong/HDiffPatch/releases).
 
 ### Manifest
+
 ```go
 import "github.com/bananalabs-oss/potassium/manifest"
 
@@ -146,10 +155,11 @@ m, err := manifest.Load("manifest.json")
 ## Types
 
 ### AllocateRequest
+
 ```go
 type AllocateRequest struct {
     Image       string
-    Ports       []PortMapping
+    Ports       []PortBinding
     Environment map[string]string
     Network     string  // Overlay network name
     IP          string  // Static IP on network
@@ -157,6 +167,7 @@ type AllocateRequest struct {
 ```
 
 ### ServerInfo
+
 ```go
 type ServerInfo struct {
     ID          string
@@ -164,7 +175,7 @@ type ServerInfo struct {
     Mode        string
     Host        string
     Port        int
-	WebhookPort int
+ WebhookPort int
     Players     int
     MaxPlayers  int
     Matches     map[string]MatchInfo
@@ -175,3 +186,4 @@ type ServerInfo struct {
 ## License
 
 MIT
+

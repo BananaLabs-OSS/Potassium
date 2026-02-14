@@ -21,27 +21,27 @@ const (
 )
 
 type ServerInfo struct {
-	ID          string     `json:"ID"`
-	Type        ServerType `json:"Type"`
-	Mode        string     `json:"Mode"`
-	Host        string     `json:"Host"`
-	Port        int        `json:"Port"`
-	WebhookPort int        `json:"WebhookPort,omitempty"`
+	ID          string     `json:"id"`
+	Type        ServerType `json:"type"`
+	Mode        string     `json:"mode"`
+	Host        string     `json:"host"`
+	Port        int        `json:"port"`
+	WebhookPort int        `json:"webhookPort,omitempty"`
 
 	// For lobby servers (no matches)
-	Players    int `json:"Players"`
-	MaxPlayers int `json:"MaxPlayers"`
+	Players    int `json:"players"`
+	MaxPlayers int `json:"maxPlayers"`
 
 	// For game servers
-	Matches map[string]MatchInfo `json:"Matches"`
+	Matches map[string]MatchInfo `json:"matches"`
 
 	Metadata map[string]string
 }
 
 type MatchInfo struct {
-	Status  MatchStatus `json:"Status"`
-	Need    int         `json:"Need"`
-	Players []string    `json:"Players"`
+	Status  MatchStatus `json:"status"`
+	Need    int         `json:"need"`
+	Players []string    `json:"players"`
 }
 
 type ListFilter struct {
@@ -193,7 +193,7 @@ func (r *Registry) List(filter *ListFilter) []ServerInfo {
 func (r *Registry) FindReadyMatch(mode string) (ServerInfo, string, bool) {
 	// RLock
 	r.mu.RLock()
-	defer r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	// Loop through matches, find one that's ready
 	for _, server := range r.servers {
