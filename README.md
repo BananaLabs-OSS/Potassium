@@ -1,6 +1,6 @@
 # Potassium
 
-Core orchestration library for container management.
+Shared library for the BananaKit ecosystem.
 
 From [BananaLabs OSS](https://github.com/bananalabs-oss).
 
@@ -8,6 +8,8 @@ From [BananaLabs OSS](https://github.com/bananalabs-oss).
 
 Potassium provides:
 
+- **Middleware**: JWT auth, service-to-service auth, standard error responses
+- **Config**: Environment variable helpers and CLI flag resolution
 - **Provider Interface**: Abstract container operations
 - **Docker Provider**: Docker/Podman implementation
 - **Registry**: In-memory server registry with filtering
@@ -20,6 +22,43 @@ go get github.com/bananalabs-oss/potassium
 ```
 
 ## Usage
+
+### Config
+
+```go
+import "github.com/bananalabs-oss/potassium/config"
+
+// Required env var (fatal if missing)
+jwtSecret := config.RequireEnv("JWT_SECRET")
+
+// Env var with fallback
+dbURL := config.EnvOrDefault("DATABASE_URL", "sqlite://app.db")
+port := config.EnvOrDefaultInt("PORT", 8080)
+
+// CLI flag > env var > default resolution
+host := config.Resolve(cliHost, os.Getenv("HOST"), "0.0.0.0")
+workers := config.ResolveInt(cliWorkers, getEnvInt("WORKERS"), 4)
+```
+
+### Middleware
+
+```go
+import potassium "github.com/bananalabs-oss/potassium/middleware"
+
+// JWT auth (sets account_id and session_id in context)
+router.Use(potassium.JWTAuth(potassium.JWTConfig{
+    Secret: []byte(jwtSecret),
+}))
+
+// Service-to-service auth (X-Service-Token header)
+router.Use(potassium.ServiceAuth(serviceSecret))
+
+// Standard error response
+c.JSON(http.StatusNotFound, potassium.ErrorResponse{
+    Error:   "not_found",
+    Message: "Resource not found",
+})
+```
 
 ### Docker Provider
 
