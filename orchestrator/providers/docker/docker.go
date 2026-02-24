@@ -210,6 +210,11 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 	return d.Get(ctx, resp.ID)
 }
 
+// Restart - starts a stopped container
+func (d *DockerProvider) Restart(ctx context.Context, id string) error {
+	return d.client.ContainerStart(ctx, id, container.StartOptions{})
+}
+
 // Deallocate - takes id, returns error
 func (d *DockerProvider) Deallocate(ctx context.Context, id string) error {
 	// Stop container

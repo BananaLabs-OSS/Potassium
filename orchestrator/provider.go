@@ -38,4 +38,5 @@ type Provider interface {
 	Get(ctx context.Context, id string) (*Server, error)
 	Allocate(ctx context.Context, req AllocateRequest) (*Server, error)
 	Deallocate(ctx context.Context, id string) error
+	Restart(ctx context.Context, id string) error
 }
