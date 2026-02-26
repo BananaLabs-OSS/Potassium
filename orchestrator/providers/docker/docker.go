@@ -180,6 +180,15 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 		}
 	}
 
+	// Build resource limits
+	resources := container.Resources{}
+	if req.MemoryLimit > 0 {
+		resources.Memory = req.MemoryLimit
+	}
+	if req.CPUCount > 0 {
+		resources.NanoCPUs = int64(req.CPUCount) * 1e9
+	}
+
 	// Create container
 	resp, err := d.client.ContainerCreate(
 		ctx,
@@ -191,6 +200,7 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 		&container.HostConfig{
 			Binds:        binds,
 			PortBindings: portBindings,
+			Resources:    resources,
 		},
 		networkConfig, // Network Config
 		nil,           // Platform

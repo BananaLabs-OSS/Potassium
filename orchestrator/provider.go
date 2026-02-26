@@ -31,6 +31,8 @@ type AllocateRequest struct {
 	Ports       []PortBinding     `json:"ports"`
 	Network     string            `json:"network,omitempty"`
 	IP          string            `json:"ip,omitempty"`
+	MemoryLimit int64             `json:"memory_limit,omitempty"` // Memory limit in bytes (0 = no limit)
+	CPUCount    int               `json:"cpu_count,omitempty"`    // Number of CPUs (0 = no limit)
 }
 
 type Provider interface {
