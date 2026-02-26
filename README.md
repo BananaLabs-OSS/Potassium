@@ -191,6 +191,33 @@ m.Save("manifest.json")
 m, err := manifest.Load("manifest.json")
 ```
 
+### Database
+
+```go
+import "github.com/bananalabs-oss/potassium/database"
+
+// Connect to SQLite (WAL mode, foreign keys enabled)
+db, err := database.Connect("sqlite://app.db")
+defer db.Close()
+
+// Auto-migrate tables and indexes
+err = database.Migrate(ctx, db, []interface{}{
+    (*models.User)(nil),
+    (*models.Session)(nil),
+}, []database.Index{
+    {Name: "idx_users_email", Query: "CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)"},
+})
+```
+
+### Server
+
+```go
+import "github.com/bananalabs-oss/potassium/server"
+
+// Start HTTP server with graceful shutdown (blocks until SIGINT/SIGTERM)
+server.ListenAndShutdown(":8080", router, "MyService")
+```
+
 ## Types
 
 ### AllocateRequest
@@ -214,7 +241,7 @@ type ServerInfo struct {
     Mode        string
     Host        string
     Port        int
- WebhookPort int
+    WebhookPort int
     Players     int
     MaxPlayers  int
     Matches     map[string]MatchInfo
