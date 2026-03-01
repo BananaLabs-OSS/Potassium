@@ -35,6 +35,10 @@ func Connect(databaseURL string) (*bun.DB, error) {
 		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
 
+	if _, err := sqldb.Exec("PRAGMA busy_timeout=5000"); err != nil {
+		return nil, fmt.Errorf("failed to set busy timeout: %w", err)
+	}
+
 	db := bun.NewDB(sqldb, sqlitedialect.New())
 
 	if err := db.Ping(); err != nil {

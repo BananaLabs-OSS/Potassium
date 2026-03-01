@@ -84,6 +84,9 @@ server, err := provider.Allocate(ctx, orchestrator.AllocateRequest{
 // List containers
 servers, err := provider.List(ctx, nil)
 
+// Restart (works whether running or stopped)
+err = provider.Restart(ctx, server.ID)
+
 // Deallocate
 err = provider.Deallocate(ctx, server.ID)
 ```
@@ -196,7 +199,7 @@ m, err := manifest.Load("manifest.json")
 ```go
 import "github.com/bananalabs-oss/potassium/database"
 
-// Connect to SQLite (WAL mode, foreign keys enabled)
+// Connect to SQLite (WAL mode, foreign keys, 5s busy timeout)
 db, err := database.Connect("sqlite://app.db")
 defer db.Close()
 
