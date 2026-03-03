@@ -22,6 +22,7 @@ type PortBinding struct {
 	Host      int    `json:"host"`
 	Container int    `json:"container"`
 	Protocol  string `json:"protocol"`
+	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
 }
 
 type AllocateRequest struct {
