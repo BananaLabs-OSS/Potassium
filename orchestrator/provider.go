@@ -33,7 +33,7 @@ type AllocateRequest struct {
 	Network     string            `json:"network,omitempty"`
 	IP          string            `json:"ip,omitempty"`
 	MemoryLimit int64             `json:"memory_limit,omitempty"` // Memory limit in bytes (0 = no limit)
-	CPUCount    int               `json:"cpu_count,omitempty"`    // Number of CPUs (0 = no limit)
+	CPULimit    float64           `json:"cpu_limit,omitempty"`    // CPU limit (e.g. 0.5 = half a core, 2.0 = two cores, 0 = no limit)
 }
 
 type Provider interface {
@@ -42,4 +42,5 @@ type Provider interface {
 	Allocate(ctx context.Context, req AllocateRequest) (*Server, error)
 	Deallocate(ctx context.Context, id string) error
 	Restart(ctx context.Context, id string) error
+	Exec(ctx context.Context, id string, cmd []string) (string, error)
 }
