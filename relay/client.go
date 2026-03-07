@@ -32,7 +32,7 @@ func (c *Client) SetRoute(playerIP, backend string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("peel returned %d", resp.StatusCode)
 	}
 
@@ -40,12 +40,19 @@ func (c *Client) SetRoute(playerIP, backend string) error {
 }
 
 func (c *Client) DeleteRoute(playerIP string) error {
-	req, _ := http.NewRequest(http.MethodDelete, c.baseURL+"/routes/"+playerIP, nil)
+	req, err := http.NewRequest(http.MethodDelete, c.baseURL+"/routes/"+playerIP, nil)
+	if err != nil {
+		return fmt.Errorf("peel request failed: %w", err)
+	}
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return fmt.Errorf("peel request failed: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 && resp.StatusCode != 204 {
+		return fmt.Errorf("peel returned %d", resp.StatusCode)
+	}
 
 	return nil
 }
@@ -56,6 +63,10 @@ func (c *Client) ListRoutes() (map[string]string, error) {
 		return nil, fmt.Errorf("peel request failed: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("peel returned %d", resp.StatusCode)
+	}
 
 	var routes map[string]string
 	if err := json.NewDecoder(resp.Body).Decode(&routes); err != nil {

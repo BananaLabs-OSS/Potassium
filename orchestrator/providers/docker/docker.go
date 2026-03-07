@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strconv"
@@ -8,9 +9,10 @@ import (
 	"github.com/bananalabs-oss/potassium/orchestrator"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 )
-import "github.com/docker/docker/client"
 
 type DockerProvider struct {
 	client *client.Client
@@ -138,7 +140,7 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 		env = append(env, key+"="+value)
 	}
 
-	// Build buinds from request.volumes
+	// Build binds from request.volumes
 	var binds []string
 	for host, c := range req.Volumes {
 		binds = append(binds, host+":"+c)
@@ -185,8 +187,8 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 	if req.MemoryLimit > 0 {
 		resources.Memory = req.MemoryLimit
 	}
-	if req.CPUCount > 0 {
-		resources.NanoCPUs = int64(req.CPUCount) * 1e9
+	if req.CPULimit > 0 {
+		resources.NanoCPUs = int64(req.CPULimit * 1e9)
 	}
 
 	// Create container
@@ -196,6 +198,7 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 			Image:        req.Image,
 			Env:          env, // Env Slice
 			ExposedPorts: exposedPorts,
+			OpenStdin:    true,
 		},
 		&container.HostConfig{
 			Binds:        binds,
@@ -213,6 +216,8 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 	// Start container
 	err = d.client.ContainerStart(ctx, resp.ID, container.StartOptions{})
 	if err != nil {
+		// Clean up the created container on start failure
+		d.client.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true})
 		return nil, err
 	}
 
@@ -223,6 +228,40 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 // Restart - stops and restarts a container (works whether running or stopped).
 func (d *DockerProvider) Restart(ctx context.Context, id string) error {
 	return d.client.ContainerRestart(ctx, id, container.StopOptions{})
+}
+
+// Exec runs a command inside a container and returns stdout.
+func (d *DockerProvider) Exec(ctx context.Context, id string, cmd []string) (string, error) {
+	execID, err := d.client.ContainerExecCreate(ctx, id, container.ExecOptions{
+		Cmd:          cmd,
+		AttachStdout: true,
+		AttachStderr: true,
+	})
+	if err != nil {
+		return "", fmt.Errorf("exec create failed: %w", err)
+	}
+
+	resp, err := d.client.ContainerExecAttach(ctx, execID.ID, container.ExecAttachOptions{})
+	if err != nil {
+		return "", fmt.Errorf("exec attach failed: %w", err)
+	}
+	defer resp.Close()
+
+	var stdout, stderr bytes.Buffer
+	if _, err := stdcopy.StdCopy(&stdout, &stderr, resp.Reader); err != nil {
+		return "", fmt.Errorf("exec read failed: %w", err)
+	}
+
+	inspect, err := d.client.ContainerExecInspect(ctx, execID.ID)
+	if err != nil {
+		return "", fmt.Errorf("exec inspect failed: %w", err)
+	}
+
+	if inspect.ExitCode != 0 {
+		return "", fmt.Errorf("exec exit code %d: %s", inspect.ExitCode, stderr.String())
+	}
+
+	return stdout.String(), nil
 }
 
 // Deallocate - takes id, returns error
