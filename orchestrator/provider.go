@@ -44,4 +44,5 @@ type Provider interface {
 	Deallocate(ctx context.Context, id string) error
 	Restart(ctx context.Context, id string) error
 	Exec(ctx context.Context, id string, cmd []string) (string, error)
+	Logs(ctx context.Context, id string, tail int) (string, error)
 }
