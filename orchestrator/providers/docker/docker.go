@@ -264,6 +264,27 @@ func (d *DockerProvider) Exec(ctx context.Context, id string, cmd []string) (str
 	return stdout.String(), nil
 }
 
+// Logs returns the last `tail` lines of stdout+stderr from a container.
+func (d *DockerProvider) Logs(ctx context.Context, id string, tail int) (string, error) {
+	opts := container.LogsOptions{
+		Tail:       strconv.Itoa(tail),
+		ShowStdout: true,
+		ShowStderr: true,
+	}
+	reader, err := d.client.ContainerLogs(ctx, id, opts)
+	if err != nil {
+		return "", fmt.Errorf("container logs failed: %w", err)
+	}
+	defer reader.Close()
+
+	var buf bytes.Buffer
+	if _, err := stdcopy.StdCopy(&buf, &buf, reader); err != nil {
+		return "", fmt.Errorf("reading logs failed: %w", err)
+	}
+
+	return buf.String(), nil
+}
+
 // Deallocate - takes id, returns error
 func (d *DockerProvider) Deallocate(ctx context.Context, id string) error {
 	// Stop container
