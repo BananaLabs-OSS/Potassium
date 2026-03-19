@@ -33,6 +33,16 @@ func EnvOrDefaultInt(key string, fallback int) int {
 	return fallback
 }
 
+// EnvOrDefaultFloat returns the float64 value of an environment variable or the fallback.
+func EnvOrDefaultFloat(key string, fallback float64) float64 {
+	if val := os.Getenv(key); val != "" {
+		if f, err := strconv.ParseFloat(val, 64); err == nil {
+			return f
+		}
+	}
+	return fallback
+}
+
 // Resolve returns the first non-zero value in priority order: CLI flag, env var, fallback.
 func Resolve(cli, env, fallback string) string {
 	if cli != "" {
