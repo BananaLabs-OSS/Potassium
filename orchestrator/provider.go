@@ -33,8 +33,13 @@ type AllocateRequest struct {
 	Ports       []PortBinding     `json:"ports"`
 	Network     string            `json:"network,omitempty"`
 	IP          string            `json:"ip,omitempty"`
-	MemoryLimit int64             `json:"memory_limit,omitempty"` // Memory limit in bytes (0 = no limit)
-	CPULimit    float64           `json:"cpu_limit,omitempty"`    // CPU limit (e.g. 0.5 = half a core, 2.0 = two cores, 0 = no limit)
+	MemoryLimit    int64   `json:"memory_limit,omitempty"`     // Memory limit in bytes (0 = no limit)
+	CPULimit       float64 `json:"cpu_limit,omitempty"`        // CPU limit (e.g. 0.5 = half a core, 2.0 = two cores, 0 = no limit)
+	DiskIOReadBps  int64   `json:"disk_io_read_bps,omitempty"` // Disk read bytes/sec limit (0 = no limit)
+	DiskIOWriteBps int64   `json:"disk_io_write_bps,omitempty"` // Disk write bytes/sec limit (0 = no limit)
+	DiskSizeLimit  int64   `json:"disk_size_limit,omitempty"`  // Disk size limit in bytes (0 = no limit, requires overlay2+xfs)
+	PidsLimit      int64   `json:"pids_limit,omitempty"`       // Max processes (0 = no limit)
+	MemorySwap     int64   `json:"memory_swap,omitempty"`      // Memory+swap limit in bytes (set equal to MemoryLimit to disable swap, -1 = unlimited, 0 = unset)
 }
 
 type Provider interface {
