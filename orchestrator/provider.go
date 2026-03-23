@@ -27,19 +27,19 @@ type PortBinding struct {
 }
 
 type AllocateRequest struct {
-	Image       string            `json:"image"`
-	Environment map[string]string `json:"environment"`
-	Volumes     map[string]string `json:"volumes"`
-	Ports       []PortBinding     `json:"ports"`
-	Network     string            `json:"network,omitempty"`
-	IP          string            `json:"ip,omitempty"`
-	MemoryLimit    int64   `json:"memory_limit,omitempty"`     // Memory limit in bytes (0 = no limit)
-	CPULimit       float64 `json:"cpu_limit,omitempty"`        // CPU limit (e.g. 0.5 = half a core, 2.0 = two cores, 0 = no limit)
-	DiskIOReadBps  int64   `json:"disk_io_read_bps,omitempty"` // Disk read bytes/sec limit (0 = no limit)
-	DiskIOWriteBps int64   `json:"disk_io_write_bps,omitempty"` // Disk write bytes/sec limit (0 = no limit)
-	DiskSizeLimit  int64   `json:"disk_size_limit,omitempty"`  // Disk size limit in bytes (0 = no limit, requires overlay2+xfs)
-	PidsLimit      int64   `json:"pids_limit,omitempty"`       // Max processes (0 = no limit)
-	MemorySwap     int64   `json:"memory_swap,omitempty"`      // Memory+swap limit in bytes (set equal to MemoryLimit to disable swap, -1 = unlimited, 0 = unset)
+	Image       string            `json:"image" yaml:"image"`
+	Environment map[string]string `json:"environment" yaml:"environment"`
+	Volumes     map[string]string `json:"volumes" yaml:"volumes"`
+	Ports       []PortBinding     `json:"ports" yaml:"ports"`
+	Network     string            `json:"network,omitempty" yaml:"network,omitempty"`
+	IP          string            `json:"ip,omitempty" yaml:"ip,omitempty"`
+	MemoryLimit    int64   `json:"memory_limit,omitempty" yaml:"memory_limit,omitempty"`
+	CPULimit       float64 `json:"cpu_limit,omitempty" yaml:"cpu_limit,omitempty"`
+	DiskIOReadBps  int64   `json:"disk_io_read_bps,omitempty" yaml:"disk_io_read_bps,omitempty"`
+	DiskIOWriteBps int64   `json:"disk_io_write_bps,omitempty" yaml:"disk_io_write_bps,omitempty"`
+	DiskSizeLimit  int64   `json:"disk_size_limit,omitempty" yaml:"disk_size_limit,omitempty"`
+	PidsLimit      int64   `json:"pids_limit,omitempty" yaml:"pids_limit,omitempty"`
+	MemorySwap     int64   `json:"memory_swap,omitempty" yaml:"memory_swap,omitempty"`
 }
 
 type Provider interface {
