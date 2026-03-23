@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/bananalabs-oss/potassium/orchestrator"
+	"github.com/docker/docker/api/types/blkiodev"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
@@ -190,6 +191,31 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 	if req.CPULimit > 0 {
 		resources.NanoCPUs = int64(req.CPULimit * 1e9)
 	}
+	if req.PidsLimit > 0 {
+		resources.PidsLimit = &req.PidsLimit
+	}
+	if req.MemorySwap != 0 {
+		resources.MemorySwap = req.MemorySwap
+	}
+	// Disk I/O rate limits (applied to all block devices)
+	if req.DiskIOReadBps > 0 {
+		resources.BlkioDeviceReadBps = []*blkiodev.ThrottleDevice{
+			{Path: "/dev/sda", Rate: uint64(req.DiskIOReadBps)},
+			{Path: "/dev/nvme0n1", Rate: uint64(req.DiskIOReadBps)},
+		}
+	}
+	if req.DiskIOWriteBps > 0 {
+		resources.BlkioDeviceWriteBps = []*blkiodev.ThrottleDevice{
+			{Path: "/dev/sda", Rate: uint64(req.DiskIOWriteBps)},
+			{Path: "/dev/nvme0n1", Rate: uint64(req.DiskIOWriteBps)},
+		}
+	}
+
+	// Disk size limit (requires overlay2 + xfs with pquota)
+	storageOpt := map[string]string{}
+	if req.DiskSizeLimit > 0 {
+		storageOpt["size"] = fmt.Sprintf("%d", req.DiskSizeLimit)
+	}
 
 	// Create container
 	resp, err := d.client.ContainerCreate(
@@ -204,6 +230,7 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 			Binds:        binds,
 			PortBindings: portBindings,
 			Resources:    resources,
+			StorageOpt:   storageOpt,
 		},
 		networkConfig, // Network Config
 		nil,           // Platform
