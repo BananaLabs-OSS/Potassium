@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"encoding/json"
+	"runtime"
 	"sync"
 	"time"
 
@@ -48,7 +49,14 @@ func (d *DockerProvider) Stats(ctx context.Context, id string) (*ContainerStats,
 	cpuDelta := float64(stats.CPUStats.CPUUsage.TotalUsage - stats.PreCPUStats.CPUUsage.TotalUsage)
 	sysDelta := float64(stats.CPUStats.SystemUsage - stats.PreCPUStats.SystemUsage)
 	if sysDelta > 0 && cpuDelta > 0 {
-		cpuPercent = (cpuDelta / sysDelta) * float64(len(stats.CPUStats.CPUUsage.PercpuUsage)) * 100.0
+		numCPUs := stats.CPUStats.OnlineCPUs
+		if numCPUs == 0 {
+			numCPUs = uint32(len(stats.CPUStats.CPUUsage.PercpuUsage))
+		}
+		if numCPUs == 0 {
+			numCPUs = uint32(runtime.NumCPU())
+		}
+		cpuPercent = (cpuDelta / sysDelta) * float64(numCPUs) * 100.0
 	}
 
 	// Sum network I/O across all interfaces
