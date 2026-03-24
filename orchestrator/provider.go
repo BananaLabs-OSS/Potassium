@@ -15,7 +15,7 @@ type Server struct {
 	Name   string         `json:"name"`
 	Status ServerStatus   `json:"status"`
 	IP     string         `json:"ip"`
-	Ports  map[string]int `json:"port"`
+	Ports  map[string]int `json:"ports"`
 }
 
 type PortBinding struct {

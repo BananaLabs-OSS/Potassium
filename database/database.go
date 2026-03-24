@@ -28,20 +28,24 @@ func Connect(databaseURL string) (*bun.DB, error) {
 	}
 
 	if _, err := sqldb.Exec("PRAGMA journal_mode=WAL"); err != nil {
+		sqldb.Close()
 		return nil, fmt.Errorf("failed to set WAL mode: %w", err)
 	}
 
 	if _, err := sqldb.Exec("PRAGMA foreign_keys=ON"); err != nil {
+		sqldb.Close()
 		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
 
 	if _, err := sqldb.Exec("PRAGMA busy_timeout=5000"); err != nil {
+		sqldb.Close()
 		return nil, fmt.Errorf("failed to set busy timeout: %w", err)
 	}
 
 	db := bun.NewDB(sqldb, sqlitedialect.New())
 
 	if err := db.Ping(); err != nil {
+		sqldb.Close()
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 

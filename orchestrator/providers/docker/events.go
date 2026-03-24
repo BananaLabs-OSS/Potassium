@@ -23,6 +23,7 @@ func (d *DockerProvider) Events(ctx context.Context) (<-chan ContainerEvent, <-c
 
 	go func() {
 		defer close(eventCh)
+		defer close(errCh)
 
 		msgs, errs := d.client.Events(ctx, events.ListOptions{
 			Filters: filters.NewArgs(
