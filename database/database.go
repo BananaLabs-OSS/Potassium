@@ -27,6 +27,10 @@ func Connect(databaseURL string) (*bun.DB, error) {
 		return nil, fmt.Errorf("failed to open sqlite: %w", err)
 	}
 
+	// SQLite only supports one writer at a time. Limiting to 1 connection
+	// prevents SQLITE_BUSY errors from concurrent write transactions.
+	sqldb.SetMaxOpenConns(1)
+
 	if _, err := sqldb.Exec("PRAGMA journal_mode=WAL"); err != nil {
 		sqldb.Close()
 		return nil, fmt.Errorf("failed to set WAL mode: %w", err)
