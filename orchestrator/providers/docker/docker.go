@@ -79,6 +79,16 @@ func (d *DockerProvider) List(ctx context.Context, filter map[string]string) ([]
 			Ports:  ports,
 		}
 
+		// Inspect to get HostConfig limits (used by reconcile)
+		if inspect, err := d.client.ContainerInspect(ctx, c.ID); err == nil {
+			if inspect.HostConfig != nil {
+				server.MemoryLimit = inspect.HostConfig.Memory
+				if inspect.HostConfig.NanoCPUs > 0 {
+					server.CPULimit = float64(inspect.HostConfig.NanoCPUs) / 1e9
+				}
+			}
+		}
+
 		servers = append(servers, server)
 	}
 
@@ -128,6 +138,12 @@ func (d *DockerProvider) Get(ctx context.Context, id string) (*orchestrator.Serv
 		Status: status,
 		IP:     ip,
 		Ports:  ports,
+	}
+	if c.HostConfig != nil {
+		server.MemoryLimit = c.HostConfig.Memory
+		if c.HostConfig.NanoCPUs > 0 {
+			server.CPULimit = float64(c.HostConfig.NanoCPUs) / 1e9
+		}
 	}
 
 	return &server, nil
@@ -234,7 +250,7 @@ func (d *DockerProvider) Allocate(ctx context.Context, req orchestrator.Allocate
 		},
 		networkConfig, // Network Config
 		nil,           // Platform
-		"",            // Name (Docker generates one)
+		req.Name,      // Name (empty → Docker generates one)
 	)
 	if err != nil {
 		return nil, err

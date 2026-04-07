@@ -11,11 +11,13 @@ const (
 )
 
 type Server struct {
-	ID     string         `json:"id"`
-	Name   string         `json:"name"`
-	Status ServerStatus   `json:"status"`
-	IP     string         `json:"ip"`
-	Ports  map[string]int `json:"ports"`
+	ID          string         `json:"id"`
+	Name        string         `json:"name"`
+	Status      ServerStatus   `json:"status"`
+	IP          string         `json:"ip"`
+	Ports       map[string]int `json:"ports"`
+	CPULimit    float64        `json:"cpu_limit,omitempty"`
+	MemoryLimit int64          `json:"memory_limit,omitempty"`
 }
 
 type PortBinding struct {
@@ -28,6 +30,7 @@ type PortBinding struct {
 
 type AllocateRequest struct {
 	Image       string            `json:"image" yaml:"image"`
+	Name        string            `json:"name,omitempty" yaml:"name,omitempty"`
 	Environment map[string]string `json:"environment" yaml:"environment"`
 	Volumes     map[string]string `json:"volumes" yaml:"volumes"`
 	Ports       []PortBinding     `json:"ports" yaml:"ports"`
