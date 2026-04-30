@@ -2,8 +2,10 @@ package relay
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
@@ -55,6 +57,50 @@ func (c *Client) DeleteRoute(playerIP string) error {
 	}
 
 	return nil
+}
+
+func (c *Client) DeleteSession(ctx context.Context, playerIP string) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, c.baseURL+"/sessions/"+playerIP, nil)
+	if err != nil {
+		return fmt.Errorf("peel request failed: %w", err)
+	}
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return fmt.Errorf("peel request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return nil
+	}
+	if resp.StatusCode != 200 && resp.StatusCode != 204 {
+		return fmt.Errorf("peel returned %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func (c *Client) Health(ctx context.Context) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+"/health", nil)
+	if err != nil {
+		return "", fmt.Errorf("peel request failed: %w", err)
+	}
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("peel request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("peel returned %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read health response: %w", err)
+	}
+
+	return string(body), nil
 }
 
 func (c *Client) ListRoutes() (map[string]string, error) {
