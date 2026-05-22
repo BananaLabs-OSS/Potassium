@@ -14,6 +14,7 @@
 package middleware
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"net/http"
 	"strings"
@@ -87,7 +88,10 @@ func ServiceAuth(serviceSecret string) gin.HandlerFunc {
 			return
 		}
 
-		if token != serviceSecret {
+		// Constant-time compare prevents timing side-channel attacks
+		// that could let a network-adjacent attacker recover the
+		// service secret one byte at a time.
+		if subtle.ConstantTimeCompare([]byte(token), []byte(serviceSecret)) != 1 {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": "invalid service token",
 			})
