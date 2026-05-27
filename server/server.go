@@ -14,8 +14,10 @@ import (
 // then gracefully shuts down with a 5-second timeout.
 func ListenAndShutdown(addr string, handler http.Handler, name string) {
 	srv := &http.Server{
-		Addr:    addr,
-		Handler: handler,
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	go func() {
