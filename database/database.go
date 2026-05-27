@@ -8,7 +8,10 @@ import (
 	"strings"
 
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/dialect/sqlitedialect"
+
+	_ "github.com/lib/pq"
 	_ "modernc.org/sqlite"
 )
 
@@ -18,8 +21,36 @@ type Index struct {
 	Query string
 }
 
-// Connect opens a SQLite database connection with WAL mode and foreign keys enabled.
+// Connect opens a database connection. The dialect is chosen based on the DSN:
+// postgres:// or postgresql:// uses Postgres, anything else uses SQLite.
 func Connect(databaseURL string) (*bun.DB, error) {
+	if strings.HasPrefix(databaseURL, "postgres://") || strings.HasPrefix(databaseURL, "postgresql://") {
+		return connectPostgres(databaseURL)
+	}
+	return connectSQLite(databaseURL)
+}
+
+func connectPostgres(dsn string) (*bun.DB, error) {
+	sqldb, err := sql.Open("postgres", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open postgres: %w", err)
+	}
+
+	sqldb.SetMaxOpenConns(5)
+	sqldb.SetMaxIdleConns(2)
+
+	db := bun.NewDB(sqldb, pgdialect.New())
+
+	if err := db.Ping(); err != nil {
+		sqldb.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	log.Printf("Connected to Postgres")
+	return db, nil
+}
+
+func connectSQLite(databaseURL string) (*bun.DB, error) {
 	path := strings.TrimPrefix(databaseURL, "sqlite://")
 
 	sqldb, err := sql.Open("sqlite", path)
