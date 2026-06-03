@@ -6,9 +6,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"time"
 )
+
+// validatePlayerIP ensures playerIP is a well-formed IP address before it is
+// interpolated into a request path, so a malicious value (e.g. "../admin",
+// "x?force=true") cannot redirect the request to an unintended endpoint.
+func validatePlayerIP(playerIP string) error {
+	if net.ParseIP(playerIP) == nil {
+		return fmt.Errorf("invalid player IP: %q", playerIP)
+	}
+	return nil
+}
 
 type Client struct {
 	baseURL string
@@ -42,7 +54,10 @@ func (c *Client) SetRoute(playerIP, backend string) error {
 }
 
 func (c *Client) DeleteRoute(playerIP string) error {
-	req, err := http.NewRequest(http.MethodDelete, c.baseURL+"/routes/"+playerIP, nil)
+	if err := validatePlayerIP(playerIP); err != nil {
+		return err
+	}
+	req, err := http.NewRequest(http.MethodDelete, c.baseURL+"/routes/"+url.PathEscape(playerIP), nil)
 	if err != nil {
 		return fmt.Errorf("peel request failed: %w", err)
 	}
@@ -60,7 +75,10 @@ func (c *Client) DeleteRoute(playerIP string) error {
 }
 
 func (c *Client) DeleteSession(ctx context.Context, playerIP string) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, c.baseURL+"/sessions/"+playerIP, nil)
+	if err := validatePlayerIP(playerIP); err != nil {
+		return err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, c.baseURL+"/sessions/"+url.PathEscape(playerIP), nil)
 	if err != nil {
 		return fmt.Errorf("peel request failed: %w", err)
 	}

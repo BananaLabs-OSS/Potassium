@@ -35,13 +35,38 @@ type Claims struct {
 type JWTConfig struct {
 	// Secret is the shared JWT signing key (must match BananAuth's JWT_SECRET).
 	Secret []byte
+	// Issuer, when non-empty, is the expected token issuer (iss claim).
+	// Tokens whose iss does not match are rejected. Leave empty to skip.
+	Issuer string
+	// Audience, when non-empty, is this service's expected audience (aud claim).
+	// Tokens that do not list this audience are rejected. Leave empty to skip.
+	// Setting this per-service prevents a token minted for one service from
+	// being replayed against another under a shared HMAC secret.
+	Audience string
+}
+
+// newParser builds a JWT parser that pins the HMAC algorithm to HS256,
+// requires the exp claim (tokens without exp are rejected rather than
+// treated as never-expiring), and binds issuer/audience when configured.
+func newParser(issuer, audience string) *jwt.Parser {
+	opts := []jwt.ParserOption{
+		jwt.WithValidMethods([]string{"HS256"}),
+		jwt.WithExpirationRequired(),
+	}
+	if issuer != "" {
+		opts = append(opts, jwt.WithIssuer(issuer))
+	}
+	if audience != "" {
+		opts = append(opts, jwt.WithAudience(audience))
+	}
+	return jwt.NewParser(opts...)
 }
 
 // JWTAuth returns Gin middleware that validates Bearer tokens.
 // On success, it sets "account_id" and "session_id" in the Gin context.
 func JWTAuth(cfg JWTConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, err := extractAndValidate(c.GetHeader("Authorization"), cfg.Secret)
+		claims, err := extractAndValidate(c.GetHeader("Authorization"), cfg.Secret, cfg.Issuer, cfg.Audience)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": err.Error(),
@@ -57,12 +82,23 @@ func JWTAuth(cfg JWTConfig) gin.HandlerFunc {
 
 // ParseToken validates a raw JWT string and returns the claims.
 // Useful when you need claims without the Gin middleware (e.g., WebSocket upgrade).
+//
+// The token MUST carry an exp claim and be signed with HS256; tokens lacking
+// exp are rejected rather than treated as never-expiring. To additionally bind
+// the issuer/audience, use ParseTokenWithConfig.
 func ParseToken(tokenString string, secret []byte) (*Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+	return ParseTokenWithConfig(tokenString, JWTConfig{Secret: secret})
+}
+
+// ParseTokenWithConfig validates a raw JWT string against the given config,
+// enforcing exp-required, HS256, and (when set) the configured issuer/audience.
+func ParseTokenWithConfig(tokenString string, cfg JWTConfig) (*Claims, error) {
+	parser := newParser(cfg.Issuer, cfg.Audience)
+	token, err := parser.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return secret, nil
+		return cfg.Secret, nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("invalid token: %w", err)
@@ -102,7 +138,7 @@ func ServiceAuth(serviceSecret string) gin.HandlerFunc {
 	}
 }
 
-func extractAndValidate(authHeader string, secret []byte) (*Claims, error) {
+func extractAndValidate(authHeader string, secret []byte, issuer, audience string) (*Claims, error) {
 	if authHeader == "" {
 		return nil, fmt.Errorf("missing authorization header")
 	}
@@ -112,5 +148,5 @@ func extractAndValidate(authHeader string, secret []byte) (*Claims, error) {
 		return nil, fmt.Errorf("invalid authorization format, expected: Bearer <token>")
 	}
 
-	return ParseToken(parts[1], secret)
+	return ParseTokenWithConfig(parts[1], JWTConfig{Secret: secret, Issuer: issuer, Audience: audience})
 }
