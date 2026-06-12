@@ -9,6 +9,7 @@ import (
 	"github.com/bananalabs-oss/potassium/orchestrator"
 	"github.com/docker/docker/api/types/blkiodev"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -36,8 +37,13 @@ func New() (*DockerProvider, error) {
 
 // List - takes filter, returns slice
 func (d *DockerProvider) List(ctx context.Context, filter map[string]string) ([]orchestrator.Server, error) {
+	// Build filter args from the provided map.
+	args := filters.NewArgs()
+	for k, v := range filter {
+		args.Add(k, v)
+	}
 	// Request docker container list
-	c, err := d.client.ContainerList(ctx, container.ListOptions{})
+	c, err := d.client.ContainerList(ctx, container.ListOptions{Filters: args})
 	if err != nil {
 		return nil, err
 	}
