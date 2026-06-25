@@ -35,6 +35,9 @@ func NewClient(baseURL string) *Client {
 }
 
 func (c *Client) SetRoute(playerIP, backend string) error {
+	if err := validatePlayerIP(playerIP); err != nil {
+		return err
+	}
 	body, _ := json.Marshal(map[string]string{
 		"player_ip": playerIP,
 		"backend":   backend,
