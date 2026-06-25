@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"runtime"
 	"sync"
 	"time"
@@ -118,6 +119,7 @@ func (d *DockerProvider) StatsAll(ctx context.Context) ([]ContainerStats, error)
 
 			s, err := d.Stats(ctx, id)
 			if err != nil {
+				log.Printf("StatsAll: failed to collect stats for container %s: %v", id, err)
 				return
 			}
 			mu.Lock()

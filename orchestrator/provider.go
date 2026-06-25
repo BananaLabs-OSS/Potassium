@@ -40,6 +40,9 @@ type AllocateRequest struct {
 	CPULimit       float64 `json:"cpu_limit,omitempty" yaml:"cpu_limit,omitempty"`
 	DiskIOReadBps  int64   `json:"disk_io_read_bps,omitempty" yaml:"disk_io_read_bps,omitempty"`
 	DiskIOWriteBps int64   `json:"disk_io_write_bps,omitempty" yaml:"disk_io_write_bps,omitempty"`
+	// DiskSizeLimit is the maximum writable-layer size for the container, in bytes.
+	// Requires the overlay2 storage driver with an xfs backing filesystem mounted
+	// with the pquota option. A value of 0 means no limit.
 	DiskSizeLimit  int64   `json:"disk_size_limit,omitempty" yaml:"disk_size_limit,omitempty"`
 	PidsLimit      int64   `json:"pids_limit,omitempty" yaml:"pids_limit,omitempty"`
 	MemorySwap     int64   `json:"memory_swap,omitempty" yaml:"memory_swap,omitempty"`
