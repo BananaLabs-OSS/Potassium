@@ -146,14 +146,15 @@ func (r *Registry) List(filter *ListFilter) []ServerInfo {
 
 	var result []ServerInfo
 
-	for _, server := range r.servers {
-		// No Filter?
-		if filter == nil {
-			for _, server := range r.servers {
-				result = append(result, server)
-			}
-			return result
+	// No filter — return all servers directly without the filtered loop.
+	if filter == nil {
+		for _, server := range r.servers {
+			result = append(result, server)
 		}
+		return result
+	}
+
+	for _, server := range r.servers {
 
 		// Check Type filter
 		if filter.Type != "" && server.Type != filter.Type {
