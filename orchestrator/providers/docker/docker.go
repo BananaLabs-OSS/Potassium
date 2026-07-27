@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/bananalabs-oss/potassium/orchestrator"
 	"github.com/docker/docker/api/types/blkiodev"
@@ -17,7 +18,9 @@ import (
 )
 
 type DockerProvider struct {
-	client *client.Client
+	client    *client.Client
+	closeOnce sync.Once
+	closeErr  error
 }
 
 func New() (*DockerProvider, error) {
@@ -33,6 +36,21 @@ func New() (*DockerProvider, error) {
 	return &DockerProvider{
 		client: cli,
 	}, nil
+}
+
+// Close releases the Docker SDK client's transport resources. It is safe to
+// call repeatedly and concurrently so application-scoped hosts can use it
+// directly from idempotent teardown paths.
+func (d *DockerProvider) Close() error {
+	if d == nil {
+		return nil
+	}
+	d.closeOnce.Do(func() {
+		if d.client != nil {
+			d.closeErr = d.client.Close()
+		}
+	})
+	return d.closeErr
 }
 
 // List - takes filter, returns slice
